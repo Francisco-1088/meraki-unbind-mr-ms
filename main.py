@@ -5,7 +5,7 @@ import functions
 
 if __name__ == "__main__":
     # Change print_console to True if you want to see console output
-    dashboard = meraki.DashboardAPI(api_key=credentials.api_key,log_path="logs", print_console=False)
+    dashboard = meraki.DashboardAPI(api_key=credentials.api_key,log_path="logs")
     if credentials.org_id != '':
         org_templates = functions.gather_templates(dashboard, org_id=credentials.org_id)
     else:
@@ -143,13 +143,19 @@ if __name__ == "__main__":
                 try:
                     functions.switch_port_schedules(dashboard, dst_net_id, port_schedules)
                 except meraki.APIError as e:
-                    functions.open_window(e)
-                    error_list.append(e)
+                    if str(e) == "switch, createNetworkSwitchPortSchedule - 400 Bad Request, {'errors': ['Name has already been taken']}":
+                        pass
+                    else:
+                        functions.open_window(e)
+                        error_list.append(e)
                 try:
                     functions.switch_access_policies(dashboard, dst_net_id, access_policies)
                 except meraki.APIError as e:
-                    functions.open_window(e)
-                    error_list.append(e)
+                    if str(e) == "switch, createNetworkSwitchAccessPolicy - 400 Bad Request, {'errors': ['This access policy name has already been used']}":
+                        pass
+                    else:
+                        functions.open_window(e)
+                        error_list.append(e)
                 try:
                     functions.switch_ports(dashboard, dst_net_id, dst_org_id, switch_port_configs)
                 except meraki.APIError as e:
@@ -167,8 +173,11 @@ if __name__ == "__main__":
                 try:
                     functions.restore_rf_profiles(dashboard, src_temp_id, dst_net_id, radio_settings)
                 except meraki.APIError as e:
-                    functions.open_window(e)
-                    error_list.append(e)
+                    if str(e) == "wireless, createNetworkWirelessRfProfile - 400 Bad Request, {'errors': ['Name must be unique.']}":
+                        pass
+                    else:
+                        functions.open_window(e)
+                        error_list.append(e)
 
         if preserve_ssid_fw:
             if 'wireless' not in src_temp_prods:
