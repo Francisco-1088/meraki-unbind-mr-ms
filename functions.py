@@ -200,7 +200,6 @@ def restore_rf_profiles(dashboard, src_temp_id, dst_net_id, radio_settings):
     :param dashboard: Dashboard API client instance
     :param src_temp_id: ID of source template
     :param dst_net_id: ID of unbound network
-    :param dst_org_id: ID of organization
     """
     existing_profiles = dashboard.wireless.getNetworkWirelessRfProfiles(networkId=src_temp_id)
     for rf_profile in existing_profiles:
@@ -249,6 +248,9 @@ def ssid(dashboard, src_temp_id, dst_net_id, dst_org_id):
     for ssid in ssids:
         d = ssid
         upd = dict(d)
+        if 'wifiPersonalNetworkEnabled' in upd:
+            if upd['wifiPersonalNetworkEnabled'] == None:
+                upd['wifiPersonalNetworkEnabled'] = False
         if 'encryptionMode' in upd:
             if upd['encryptionMode'] == 'wpa-eap':
                 upd['encryptionMode'] = 'wpa'
@@ -276,6 +278,26 @@ def ssid(dashboard, src_temp_id, dst_net_id, dst_org_id):
             }
         }
         actions.append(a)
+
+    # Check for unfinished batches
+    i = False
+    while not i:
+        print("Checking for unfinished batches")
+        current_batches = dashboard.organizations.getOrganizationActionBatches(dst_org_id)
+        unfinished_batches = []
+        for b in current_batches:
+            if b['status']['completed'] == False and b['status']['failed'] == False:
+                unfinished_batches.append(b)
+
+        if len(unfinished_batches) > 4:
+            i = False
+            print(f"You have {len(unfinished_batches)} unfinished batches:")
+            for item in unfinished_batches:
+                print(item)
+            print("Waiting to complete some of these before scheduling a new one!")
+            time.sleep(10)
+        elif len(unfinished_batches) <= 4:
+            i = True
     batch = dashboard.organizations.createOrganizationActionBatch(organizationId=dst_org_id,
                                                                   actions=actions, confirmed=True)
 
@@ -316,6 +338,26 @@ def ssid_firewall(dashboard, src_temp_id, dst_net_id, dst_org_id):
         actions.append(a)
         dashboard.wireless.updateNetworkWirelessSsidFirewallL3FirewallRules(networkId=dst_net_id, number=n, **l3_fw)
 
+    # Check for unfinished batches
+    i = False
+    while not i:
+        print("Checking for unfinished batches")
+        current_batches = dashboard.organizations.getOrganizationActionBatches(dst_org_id)
+        unfinished_batches = []
+        for b in current_batches:
+            if b['status']['completed'] == False and b['status']['failed'] == False:
+                unfinished_batches.append(b)
+
+        if len(unfinished_batches) > 4:
+            i = False
+            print(f"You have {len(unfinished_batches)} unfinished batches:")
+            for item in unfinished_batches:
+                print(item['id'])
+            print("Waiting to complete some of these before scheduling a new one!")
+            time.sleep(10)
+        elif len(unfinished_batches) <= 4:
+            i = True
+
     dashboard.organizations.createOrganizationActionBatch(organizationId=dst_org_id, actions=actions,
                                                                      confirmed=True)
 
@@ -339,7 +381,25 @@ def ssid_shaping(dashboard, src_temp_id, dst_net_id, dst_org_id):
             }
         }
         actions.append(a)
+    # Check for unfinished batches
+    i = False
+    while not i:
+        print("Checking for unfinished batches")
+        current_batches = dashboard.organizations.getOrganizationActionBatches(dst_org_id)
+        unfinished_batches = []
+        for b in current_batches:
+            if b['status']['completed'] == False and b['status']['failed'] == False:
+                unfinished_batches.append(b)
 
+        if len(unfinished_batches) > 4:
+            i = False
+            print(f"You have {len(unfinished_batches)} unfinished batches:")
+            for item in unfinished_batches:
+                print(item['id'])
+            print("Waiting to complete some of these before scheduling a new one!")
+            time.sleep(10)
+        elif len(unfinished_batches) <= 4:
+            i = True
     dashboard.organizations.createOrganizationActionBatch(organizationId=dst_org_id, actions=actions, confirmed=True)
 
 def switch_qos(dashboard, src_temp_id, dst_net_id, dst_org_id):
@@ -391,8 +451,29 @@ def switch_qos(dashboard, src_temp_id, dst_net_id, dst_org_id):
 
     # Create one synchronous action batch for every batch in batches
     for batch in batches:
+        # Check for unfinished batches
+        i = False
+        while not i:
+            print("Checking for unfinished batches")
+            current_batches = dashboard.organizations.getOrganizationActionBatches(dst_org_id)
+            unfinished_batches = []
+            for b in current_batches:
+                if b['status']['completed'] == False and b['status']['failed'] == False:
+                    unfinished_batches.append(b)
+
+            if len(unfinished_batches) > 4:
+                i = False
+                print(f"You have {len(unfinished_batches)} unfinished batches:")
+                for item in unfinished_batches:
+                    print(item['id'])
+                print("Waiting to complete some of these before scheduling a new one!")
+                time.sleep(10)
+            elif len(unfinished_batches) <= 4:
+                i = True
+
         dashboard.organizations.createOrganizationActionBatch(organizationId=dst_org_id, actions=batch, confirmed=True,
                                                               synchronous=True)
+
 def switch_stp(dashboard, src_temp_id, src_org_id, dst_net_id, dst_org_id):
     """
     Obtains existing switch STP settings in template and applies to unbound network
@@ -462,6 +543,26 @@ def group_policies(dashboard, src_temp_id, dst_net_id, dst_org_id):
 
     # Create one synchronous action batch for every batch in batches
     for batch in batches:
+        # Check for unfinished batches
+        i = False
+        while not i:
+            print("Checking for unfinished batches")
+            current_batches = dashboard.organizations.getOrganizationActionBatches(dst_org_id)
+            unfinished_batches = []
+            for b in current_batches:
+                if b['status']['completed'] == False and b['status']['failed'] == False:
+                    unfinished_batches.append(b)
+
+            if len(unfinished_batches) > 4:
+                i = False
+                print(f"You have {len(unfinished_batches)} unfinished batches:")
+                for item in unfinished_batches:
+                    print(item['id'])
+                print("Waiting to complete some of these before scheduling a new one!")
+                time.sleep(10)
+            elif len(unfinished_batches) <= 4:
+                i = True
+
         dashboard.organizations.createOrganizationActionBatch(organizationId=dst_org_id, actions=batch, confirmed=True,
                                                               synchronous=True)
 def switch_port_schedules(dashboard, dst_net_id, port_schedules):
@@ -549,6 +650,24 @@ def switch_ports(dashboard, dst_net_id, dst_org_id, switch_port_configs):
             }
             actions.append(action)
     for i in range(0, len(actions), 100):
+        # Check for unfinished batches
+        j = False
+        while not j:
+            print("Checking for unfinished batches")
+            current_batches = dashboard.organizations.getOrganizationActionBatches(dst_org_id)
+            unfinished_batches = []
+            for b in current_batches:
+                if b['status']['completed'] == False and b['status']['failed'] == False:
+                    unfinished_batches.append(b)
+            if len(unfinished_batches) > 4:
+                j = False
+                print(f"You have {len(unfinished_batches)} unfinished batches:")
+                for item in unfinished_batches:
+                    print(item['id'])
+                print("Waiting to complete some of these before scheduling a new one!")
+                time.sleep(10)
+            elif len(unfinished_batches) <= 4:
+                j = True
         subactions = actions[i:i + 100]
         dashboard.organizations.createOrganizationActionBatch(
             organizationId=dst_org_id,
@@ -578,7 +697,6 @@ def net_alerts(dashboard, src_temp_id, dst_net_id):
     :param dashboard: Dashboard API client instance
     :param src_temp_id: ID of source template
     :param dst_net_id: ID of unbound network
-    :param dst_org_id: ID of organization
     :return:
     """
     src_alerts = dashboard.networks.getNetworkAlertsSettings(networkId=src_temp_id)
@@ -603,7 +721,6 @@ def net_syslog(dashboard, src_temp_id, dst_net_id):
     :param dashboard: Dashboard API client instance
     :param src_temp_id: ID of source template
     :param dst_net_id: ID of unbound network
-    :param dst_org_id: ID of organization
     :return:
     """
     src_syslog = dashboard.networks.getNetworkSyslogServers(networkId=src_temp_id)
@@ -615,7 +732,6 @@ def net_snmp(dashboard, src_temp_id, dst_net_id):
     :param dashboard: Dashboard API client instance
     :param src_temp_id: ID of source template
     :param dst_net_id: ID of unbound network
-    :param dst_org_id: ID of organization
     :return:
     """
     src_snmp = dashboard.networks.getNetworkSnmp(networkId=src_temp_id)
@@ -627,7 +743,6 @@ def net_analytics(dashboard, src_temp_id, dst_net_id):
     :param dashboard: Dashboard API client instance
     :param src_temp_id: ID of source template
     :param dst_net_id: ID of unbound network
-    :param dst_org_id: ID of organization
     :return:
     """
     src_ta = dashboard.networks.getNetworkTrafficAnalysis(networkId=src_temp_id)
