@@ -1,3 +1,5 @@
+[![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/Francisco-1088/meraki-unbind-mr-ms)
+
 # meraki-unbind-mr-ms
 
 This is a simple application that can unbind a MR/MS network from its template and retain various configs in the unbound network. It can be useful when:
